@@ -6,35 +6,27 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     @State private var filmsViewModel = FilmsViewModel()
+    @State private var favouritesViewModel = FavouritesViewModel()
+    
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
-        NavigationStack{
-            Group{
-                switch filmsViewModel.state {
-                case .idle:
-                    Text("No Films yet")
-                    
-                case .loading:
-                    ProgressView{
-                        Text("Loading...")
-                    }
-                    
-                case .loaded(let films):
-                    ForEach(films) { film in
-                        Text(film.title)
-                    }
-                    
-                case .error(let error):
-                    Text(error)
-                        .foregroundStyle(.red)
-                }
+        TabView {
+            Tab("Movies", systemImage: "movieclapper"){
+                FimsScreen(filmsViewModel: filmsViewModel, favouritesViewModel: favouritesViewModel)
             }
-            .task {
-                await filmsViewModel.fetch()
+            
+            Tab ("Favourites", systemImage: "heart"){
+                FavouritesScreen(filmsViewModel: filmsViewModel, favouritesViewModel: favouritesViewModel)
             }
+        }
+        .task {
+            favouritesViewModel.configure(modelContext: modelContext)
+            await filmsViewModel.fetch()
         }
     }
 }
